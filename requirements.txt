@@ -4,3 +4,4 @@
 
 azure-functions
 pyjwt
+azure-storage-blob
