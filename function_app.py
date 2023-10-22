@@ -4,8 +4,9 @@ import jwt
 import json
 import requests
 from azure.storage.blob import BlobServiceClient
-
-def store_to_container(connection_string, container_name, csv_data, file_name):
+connection_string = 'DefaultEndpointsProtocol=https;AccountName=testbi2q;AccountKey=3stbiTyAoo4bRRRbPR0vBitfLz7OE06JbVrmMVd3mFXP6no8oVvMjkg4lhPWMxLvOJIC7EWD+VtT+ASt3E/oEg==;EndpointSuffix=core.windows.net'
+container_name = 'stravakeys' 
+def store_to_container(csv_data, file_name):
     # Create aBlobServiceClient using the connection string
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
     # Get a reference to the container
@@ -15,7 +16,7 @@ def store_to_container(connection_string, container_name, csv_data, file_name):
     blob_client.upload_blob(csv_data, overwrite=True)
     print("DataFrame successfully written to Azure Storage container.")
 
-def retreive_from_container(connection_string, container_name, file_name):
+def retreive_from_container(file_name):
     # Create aBlobServiceClient using the connection string
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
     # Get a reference to the container
@@ -64,11 +65,15 @@ def Resource_API(req: func.HttpRequest) -> func.HttpResponse:
                        
 
 
-            json_data = json.dumps({ "userid2": strava_tokens })
+            json_data = json.dumps({ userid : strava_tokens })
+            # store to local file
+            with open('userid.json', 'w') as outfile:
+                json.dump(json_data, outfile)
+
             # store json file in blob storage
-            store_to_container('DefaultEndpointsProtocol=https;AccountName=testbi2q;AccountKey=3stbiTyAoo4bRRRbPR0vBitfLz7OE06JbVrmMVd3mFXP6no8oVvMjkg4lhPWMxLvOJIC7EWD+VtT+ASt3E/oEg==;EndpointSuffix=core.windows.net', 'stravakeys', json_data, 'userid.json')
+            store_to_container(json_data, 'userid.json')
             # retreive json file from blob storage
-            filecontents = retreive_from_container('DefaultEndpointsProtocol=https;AccountName=testbi2q;AccountKey=3stbiTyAoo4bRRRbPR0vBitfLz7OE06JbVrmMVd3mFXP6no8oVvMjkg4lhPWMxLvOJIC7EWD+VtT+ASt3E/oEg==;EndpointSuffix=core.windows.net', 'stravakeys', 'userid.json')
+            filecontents = retreive_from_container('userid.json')
             logging.info(filecontents)
             logging.info(decoded_name)
         except jwt.ExpiredSignatureError:
