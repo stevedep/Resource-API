@@ -3,32 +3,49 @@ import logging
 import jwt
 import json
 import requests
-from azure.storage.blob import BlobServiceClient
-connection_string = 'DefaultEndpointsProtocol=https;AccountName=testbi2q;AccountKey=3stbiTyAoo4bRRRbPR0vBitfLz7OE06JbVrmMVd3mFXP6no8oVvMjkg4lhPWMxLvOJIC7EWD+VtT+ASt3E/oEg==;EndpointSuffix=core.windows.net'
-container_name = 'stravakeys' 
-def store_to_container(csv_data, file_name):
-    # Create aBlobServiceClient using the connection string
-    blob_service_client = BlobServiceClient.from_connection_string(connection_string)
-    # Get a reference to the container
-    container_client = blob_service_client.get_container_client(container_name)
-    # Upload the CSV data to a blob in the container
-    blob_client = container_client.get_blob_client(file_name)
-    blob_client.upload_blob(csv_data, overwrite=True)
-    print("DataFrame successfully written to Azure Storage container.")
-
-def retreive_from_container(file_name):
-    # Create aBlobServiceClient using the connection string
-    blob_service_client = BlobServiceClient.from_connection_string(connection_string)
-    # Get a reference to the container
-    container_client = blob_service_client.get_container_client(container_name)
-    # Download the blob to a local file
-    blob_client = container_client.get_blob_client(file_name)
-    with open(file_name, "wb") as my_blob:
-        blob_data = blob_client.download_blob()
-        blob_data.readinto(my_blob)
-    print("Blob data successfully downloaded.")
+from bp_azure_blob import store_to_container, retreive_from_container
+from bp_token_functions import fn_GetMinutesLeft
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
+
+
+@app.route('User', methods=['GET'])
+def get_users(req: func.HttpRequest) -> func.HttpResponse:
+    # Handle GET request for /api/users
+    token_str = req.headers.get('Authorization')    
+    if token_str:
+        try:
+            decoded_name = jwt.decode(token_str, 'SFGBER345345#$%#$fefe', algorithms=['HS256'])
+            username = decoded_name.get('userid')
+            # create json file with userid
+            
+            # Make Strava auth API call with your 
+            # client_code, client_secret and code
+            with open('userid.json') as json_file:
+                strava_tokens = json.load(json_file)
+            
+            # check if key exists for username
+            if username in strava_tokens:
+                return func.HttpResponse("User found", status_code=200)
+            else:
+                return func.HttpResponse("User not found", status_code=404)
+
+        except jwt.ExpiredSignatureError:
+            return func.HttpResponse(
+                "The authorization token has expired.",
+                status_code=401
+            )
+        except jwt.InvalidTokenError:
+            return func.HttpResponse(
+                "The authorization token is invalid.",
+                status_code=401
+            )        
+    else:
+        return func.HttpResponse(
+             "No valid authorization header was provided in the request.",
+             status_code=401
+        )
+    return func.HttpResponse(username)
 
 @app.route(route="Resource_API")
 def Resource_API(req: func.HttpRequest) -> func.HttpResponse:
@@ -44,11 +61,17 @@ def Resource_API(req: func.HttpRequest) -> func.HttpResponse:
     if name:
         try:
             decoded_name = jwt.decode(name, 'SFGBER345345#$%#$fefe', algorithms=['HS256'])
-            userid = decoded_name.get('userid')
+            username = decoded_name.get('userid')
             # create json file with userid
-    
+            
             # Make Strava auth API call with your 
             # client_code, client_secret and code
+            with open('userid.json') as json_file:
+                strava_tokens = json.load(json_file)
+
+            minutes_left = fn_GetMinutesLeft(strava_tokens, username)
+            logging.info(minutes_left)
+            '''
             response = requests.post(
                                 url = 'https://www.strava.com/oauth/token',
                                 data = {
@@ -59,23 +82,26 @@ def Resource_API(req: func.HttpRequest) -> func.HttpResponse:
                                         }
                             ,verify=False)
             #Save json response as a variable
-            strava_tokens = response.json()
+            logging.info(strava_tokens)
+            strava_tokens[username] = response.json()
             # Save tokens to a stringvariable
             #strava_tokens = json.dumps(strava_tokens)
                        
+            logging.info(strava_tokens)
 
-
-            json_data = json.dumps({ userid : strava_tokens })
+            # json_data = json.dumps({ username : strava_tokens })
             # store to local file
             with open('userid.json', 'w') as outfile:
-                json.dump(json_data, outfile)
+                json.dump(strava_tokens, outfile)
 
             # store json file in blob storage
-            store_to_container(json_data, 'userid.json')
+            # store_to_container(strava_tokens, 'userid.json')
             # retreive json file from blob storage
-            filecontents = retreive_from_container('userid.json')
-            logging.info(filecontents)
+            
+            #filecontents = retreive_from_container('userid.json')
+            #logging.info(filecontents)
             logging.info(decoded_name)
+            '''
         except jwt.ExpiredSignatureError:
             return func.HttpResponse(
                 "The authorization token has expired.",
@@ -88,7 +114,7 @@ def Resource_API(req: func.HttpRequest) -> func.HttpResponse:
             )        
 
     if decoded_name:
-        return func.HttpResponse(userid)
+        return func.HttpResponse(str(minutes_left))
     else:
         return func.HttpResponse(
              "No valid authorization header was provided in the request.",
