@@ -5,6 +5,7 @@ import json
 import requests
 from bp_azure_blob import store_to_container, retreive_from_container
 from bp_token_functions import fn_GetMinutesLeft
+import datetime
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
@@ -18,7 +19,8 @@ def get_users(req: func.HttpRequest) -> func.HttpResponse:
             decoded_name = jwt.decode(token_str, 'SFGBER345345#$%#$fefe', algorithms=['HS256'])
             username = decoded_name.get('userid')
             # create json file with userid
-            
+            if datetime.datetime.utcnow() > datetime.datetime.fromtimestamp(decoded_name['exp']):
+                return func.HttpResponse(json.dumps({'error': 'token expired'}), status_code=401)
             # Make Strava auth API call with your 
             # client_code, client_secret and code
             with open('userid.json') as json_file:
