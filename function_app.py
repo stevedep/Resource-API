@@ -19,8 +19,8 @@ def get_users(req: func.HttpRequest) -> func.HttpResponse:
             decoded_name = jwt.decode(token_str, 'SFGBER345345#$%#$fefe', algorithms=['HS256'])
             username = decoded_name.get('userid')
             # create json file with userid
-            if datetime.datetime.utcnow() > datetime.datetime.fromtimestamp(decoded_name['exp']):
-                return func.HttpResponse(json.dumps({'error': 'token expired'}), status_code=401)
+            #if datetime.datetime.utcnow() > datetime.datetime.fromtimestamp(decoded_name['exp']):
+            #    return func.HttpResponse(json.dumps({'error': 'token expired'}), status_code=401)
             # Make Strava auth API call with your 
             # client_code, client_secret and code
             with open('userid.json') as json_file:
@@ -49,31 +49,69 @@ def get_users(req: func.HttpRequest) -> func.HttpResponse:
         )
     return func.HttpResponse(username)
 
-@app.route(route="Resource_API")
-def Resource_API(req: func.HttpRequest) -> func.HttpResponse:
+
+@app.route(route="Get_Activities")
+def Get_Activities(req: func.HttpRequest) -> func.HttpResponse:
+        token_str = req.headers.get('Authorization')    
+        if token_str:
+            try:
+                decoded_name = jwt.decode(token_str, 'SFGBER345345#$%#$fefe', algorithms=['HS256'])
+                username = decoded_name.get('userid')
+                with open('userid.json') as json_file:
+                    strava_tokens = json.load(json_file)
+                # check if key exists for username
+                if username in strava_tokens:
+                    # check if token is valid
+                    minutes_left = fn_GetMinutesLeft(strava_tokens, username)
+                    if minutes_left < 1:
+                        return func.HttpResponse("Strava Token expired", status_code=401)
+                    else:
+                        access_token = strava_tokens[username]['access_token']
+                        # get activities
+                        url = "https://www.strava.com/api/v3/activities"
+                        # Get first page of activities from Strava with all fields
+                        r = requests.get(url + '?access_token=' + access_token, verify=False)
+                        r = r.json()
+                        
+                        return func.HttpResponse(json.dumps(r), status_code=200)
+                else:
+                    return func.HttpResponse("User not found", status_code=404)
+
+            except jwt.ExpiredSignatureError:
+                return func.HttpResponse(
+                    "The authorization token has expired.",
+                    status_code=401
+                )
+            except jwt.InvalidTokenError:
+                return func.HttpResponse(
+                    "The authorization token is invalid.",
+                    status_code=401
+                )        
+        else:
+            return func.HttpResponse(
+                "No valid authorization header was provided in the request.",
+                status_code=401
+            )
+        return func.HttpResponse(username)
+
+@app.route(route="Store_Tokens")
+def Store_Tokens(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
     #print the header of the request
     
-    logging.info(req.headers.get('state'))
     logging.info( req.params.get('state'))
-    name =  req.params.get('state')
+    token =  req.params.get('state')
     code =  req.params.get('code')
     # decode name using jwt and a secret key
     decoded_name = None
-    if name:
+    if token:
         try:
-            decoded_name = jwt.decode(name, 'SFGBER345345#$%#$fefe', algorithms=['HS256'])
+            decoded_name = jwt.decode(token, 'SFGBER345345#$%#$fefe', algorithms=['HS256'])
             username = decoded_name.get('userid')
-            # create json file with userid
             
-            # Make Strava auth API call with your 
-            # client_code, client_secret and code
             with open('userid.json') as json_file:
                 strava_tokens = json.load(json_file)
-
-            minutes_left = fn_GetMinutesLeft(strava_tokens, username)
-            logging.info(minutes_left)
-            '''
+            
             response = requests.post(
                                 url = 'https://www.strava.com/oauth/token',
                                 data = {
@@ -86,24 +124,16 @@ def Resource_API(req: func.HttpRequest) -> func.HttpResponse:
             #Save json response as a variable
             logging.info(strava_tokens)
             strava_tokens[username] = response.json()
-            # Save tokens to a stringvariable
-            #strava_tokens = json.dumps(strava_tokens)
-                       
-            logging.info(strava_tokens)
-
-            # json_data = json.dumps({ username : strava_tokens })
             # store to local file
             with open('userid.json', 'w') as outfile:
                 json.dump(strava_tokens, outfile)
 
             # store json file in blob storage
             # store_to_container(strava_tokens, 'userid.json')
-            # retreive json file from blob storage
-            
+            # retreive json file from blob storage            
             #filecontents = retreive_from_container('userid.json')
-            #logging.info(filecontents)
-            logging.info(decoded_name)
-            '''
+            #logging.info(filecontents)            
+            
         except jwt.ExpiredSignatureError:
             return func.HttpResponse(
                 "The authorization token has expired.",
@@ -116,7 +146,13 @@ def Resource_API(req: func.HttpRequest) -> func.HttpResponse:
             )        
 
     if decoded_name:
-        return func.HttpResponse(str(minutes_left))
+            # Redirect to a page
+        return func.HttpResponse(
+            status_code=302,
+            headers={
+                'Location': 'http://localhost:3000'
+            }
+        )
     else:
         return func.HttpResponse(
              "No valid authorization header was provided in the request.",
