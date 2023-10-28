@@ -6,6 +6,7 @@ import requests
 from bp_azure_blob import store_to_container, retreive_from_container
 from bp_token_functions import fn_GetMinutesLeft
 import datetime
+import time
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
@@ -28,9 +29,11 @@ def get_users(req: func.HttpRequest) -> func.HttpResponse:
             
             # check if key exists for username
             if username in strava_tokens:
-                return func.HttpResponse("User found", status_code=200)
+                # add 4 seconds delay
+                time.sleep(4)
+                return func.HttpResponse("User found", status_code=202)
             else:
-                return func.HttpResponse("User not found", status_code=404)
+                return func.HttpResponse("User not found", status_code=404) #
 
         except jwt.ExpiredSignatureError:
             return func.HttpResponse(
@@ -62,18 +65,38 @@ def Get_Activities(req: func.HttpRequest) -> func.HttpResponse:
                 # check if key exists for username
                 if username in strava_tokens:
                     # check if token is valid
-                    minutes_left = fn_GetMinutesLeft(strava_tokens, username)
-                    if minutes_left < 1:
-                        return func.HttpResponse("Strava Token expired", status_code=401)
-                    else:
-                        access_token = strava_tokens[username]['access_token']
-                        # get activities
-                        url = "https://www.strava.com/api/v3/activities"
-                        # Get first page of activities from Strava with all fields
-                        r = requests.get(url + '?access_token=' + access_token, verify=False)
-                        r = r.json()
-                        
-                        return func.HttpResponse(json.dumps(r), status_code=200)
+                    try:
+                        minutes_left = fn_GetMinutesLeft(strava_tokens, username)
+                        if minutes_left < 1:
+                            logging.info("Strava Token expired")                        
+                            response = requests.post(
+                                url = 'https://www.strava.com/oauth/token',
+                                data = {
+                                        'client_id': 13077,
+                                        'client_secret': 'eff7509ab872e832466790aa0da2be7d1a40a568',
+                                        'grant_type': 'refresh_token',
+                                        'refresh_token': strava_tokens[username]['refresh_token']
+                                        }
+                            , verify=False)
+                            # Save response as json in new variable
+                            new_strava_tokens = response.json()
+                            # Save new tokens to file
+                            strava_tokens[username] = new_strava_tokens
+                            # store to local file
+                            with open('userid.json', 'w') as outfile:
+                                json.dump(strava_tokens, outfile)
+                            return func.HttpResponse("Strava Token expired", status_code=201)
+                        else:
+                            access_token = strava_tokens[username]['access_token']
+                            # get activities
+                            url = "https://www.strava.com/api/v3/activities"
+                            # Get first page of activities from Strava with all fields
+                            r = requests.get(url + '?access_token=' + access_token, verify=False)
+                            r = r.json()
+                            
+                            return func.HttpResponse(json.dumps(r), status_code=200)
+                    except:
+                            return func.HttpResponse("Get new tokens", status_code=404)
                 else:
                     return func.HttpResponse("User not found", status_code=404)
 

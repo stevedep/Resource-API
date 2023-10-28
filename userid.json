@@ -145,32 +145,13 @@
         }
     },
     "Steve de Peijper": {
-        "token_type": "Bearer",
-        "expires_at": 1698403470,
-        "expires_in": 19852,
-        "refresh_token": "8a138327cb496c573fcb20157e4d3e3480bbceac",
-        "access_token": "daf8ebe9b490f6debf242a9ef7c910e2279555f9",
-        "athlete": {
-            "id": 16132548,
-            "username": "steven_dp",
-            "resource_state": 2,
-            "firstname": "Steven",
-            "lastname": "Dp \ud83d\ude0d\ud83d\udeb4\ud83c\udffc",
-            "bio": "",
-            "city": "",
-            "state": "",
-            "country": "",
-            "sex": "M",
-            "premium": true,
-            "summit": true,
-            "created_at": "2016-07-04T05:35:47Z",
-            "updated_at": "2023-10-14T16:54:02Z",
-            "badge_type_id": 1,
-            "weight": 80.0,
-            "profile_medium": "https://dgalywyr863hv.cloudfront.net/pictures/athletes/16132548/25518428/1/medium.jpg",
-            "profile": "https://dgalywyr863hv.cloudfront.net/pictures/athletes/16132548/25518428/1/large.jpg",
-            "friend": null,
-            "follower": null
-        }
+        "message": "Authorization Error",
+        "errors": [
+            {
+                "resource": "Application",
+                "field": "",
+                "code": "invalid"
+            }
+        ]
     }
 }
