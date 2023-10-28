@@ -31,14 +31,14 @@ def get_users(req: func.HttpRequest) -> func.HttpResponse:
             if username in strava_tokens:
                 # add 4 seconds delay
                 time.sleep(4)
-                return func.HttpResponse("User found", status_code=202)
+                return func.HttpResponse("User found", status_code=204)
             else:
                 return func.HttpResponse("User not found", status_code=404) #
 
         except jwt.ExpiredSignatureError:
             return func.HttpResponse(
                 "The authorization token has expired.",
-                status_code=401
+                status_code=440
             )
         except jwt.InvalidTokenError:
             return func.HttpResponse(
