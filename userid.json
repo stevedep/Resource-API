@@ -144,14 +144,62 @@
             "follower": null
         }
     },
+    "Stesdfsdve de Peijper": {
+        "token_type": "Bearer",
+        "expires_at": 1698577446,
+        "expires_in": 21600,
+        "refresh_token": "8a138327cb496c573fcb20157e4d3e3480bbceac",
+        "access_token": "918de63d68121bd55fc498a856f51df310c187d9",
+        "athlete": {
+            "id": 16132548,
+            "username": "steven_dp",
+            "resource_state": 2,
+            "firstname": "Steven",
+            "lastname": "Dp \ud83d\ude0d\ud83d\udeb4\ud83c\udffc",
+            "bio": "",
+            "city": "",
+            "state": "",
+            "country": "",
+            "sex": "M",
+            "premium": true,
+            "summit": true,
+            "created_at": "2016-07-04T05:35:47Z",
+            "updated_at": "2023-10-14T16:54:02Z",
+            "badge_type_id": 1,
+            "weight": 80.0,
+            "profile_medium": "https://dgalywyr863hv.cloudfront.net/pictures/athletes/16132548/25518428/1/medium.jpg",
+            "profile": "https://dgalywyr863hv.cloudfront.net/pictures/athletes/16132548/25518428/1/large.jpg",
+            "friend": null,
+            "follower": null
+        }
+    },
     "Steve de Peijper": {
-        "message": "Authorization Error",
-        "errors": [
-            {
-                "resource": "Application",
-                "field": "",
-                "code": "invalid"
-            }
-        ]
+        "token_type": "Bearer",
+        "expires_at": 1698577446,
+        "expires_in": 13635,
+        "refresh_token": "8a138327cb496c573fcb20157e4d3e3480bbceac",
+        "access_token": "918de63d68121bd55fc498a856f51df310c187d9",
+        "athlete": {
+            "id": 16132548,
+            "username": "steven_dp",
+            "resource_state": 2,
+            "firstname": "Steven",
+            "lastname": "Dp \ud83d\ude0d\ud83d\udeb4\ud83c\udffc",
+            "bio": "",
+            "city": "",
+            "state": "",
+            "country": "",
+            "sex": "M",
+            "premium": true,
+            "summit": true,
+            "created_at": "2016-07-04T05:35:47Z",
+            "updated_at": "2023-10-14T16:54:02Z",
+            "badge_type_id": 1,
+            "weight": 80.0,
+            "profile_medium": "https://dgalywyr863hv.cloudfront.net/pictures/athletes/16132548/25518428/1/medium.jpg",
+            "profile": "https://dgalywyr863hv.cloudfront.net/pictures/athletes/16132548/25518428/1/large.jpg",
+            "friend": null,
+            "follower": null
+        }
     }
 }
