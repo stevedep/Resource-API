@@ -194,6 +194,7 @@ def get_access_token(username):
                 return func.HttpResponse("Strava Token expired", status_code=201)
             else: # strava token is valid
                 access_token = strava_tokens[username]['access_token']
+                logging.info("Strava Token found")
                 return func.HttpResponse(access_token, status_code=200)
         except: # strava token not found, error
             return func.HttpResponse("Get new tokens", status_code=404)
@@ -206,23 +207,28 @@ def Get_Activities(req: func.HttpRequest) -> func.HttpResponse:
     token_str = req.headers.get('Authorization')
     if token_str:
         # send token_str to api to get username, performa a get request to api
+        logging.info('15: CheckToken')
         url = "http://localhost:7072/api/CheckToken"
         headers = {'Authorization': token_str}
         r = requests.get(url, headers=headers)
         logging.info(r.status_code)
         if r.status_code == 202:
+            logging.info('16: 202 terug')
             # get username from responsetext and load into json to then get the userid using that key
             username = json.loads(str(r.text))['userid']
             logging.info(username)
             # we will call our function here
+            logging.info('17: get_access_token')
             access_token_response = get_access_token(username)
             stcode = access_token_response.status_code
             if stcode == 200:
+                logging.info('22: 200 terug met access token')
                 access_token = access_token_response.get_body().decode('utf-8')
                 logging.info(str(access_token))
                 # get activities
                 url = "https://www.strava.com/api/v3/activities"
                 # Get first page of activities from Strava with all fields
+                logging.info('23: get activities bij strava')
                 r = requests.get(
                     url + '?access_token=' + str(access_token), verify=False)
                 r = r.json()
