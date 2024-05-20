@@ -175,7 +175,7 @@ def get_access_token(username):
         try:
             minutes_left = fn_GetMinutesLeft(strava_tokens, username)
             if minutes_left < 1:
-                logging.info("Strava Token expired")
+                logging.info("18: Strava Token expired")
                 response = requests.post(
                     url='https://www.strava.com/oauth/token',
                     data={
@@ -185,13 +185,16 @@ def get_access_token(username):
                         'refresh_token': strava_tokens[username]['refresh_token']
                     }, verify=False)
                 # Save response as json in new variable
+                logging.info("19: New Strava Token")
                 new_strava_tokens = response.json()
                 # Save new tokens to file
                 strava_tokens[username] = new_strava_tokens
                 # store to local file
                 with open('userid.json', 'w') as outfile:
                     json.dump(strava_tokens, outfile)
-                return func.HttpResponse("Strava Token expired", status_code=201)
+                logging.info("20: New Strava Token stored")
+                access_token = strava_tokens[username]['access_token']
+                return func.HttpResponse(access_token, status_code=201)
             else: # strava token is valid
                 access_token = strava_tokens[username]['access_token']
                 logging.info("Strava Token found")
@@ -221,8 +224,11 @@ def Get_Activities(req: func.HttpRequest) -> func.HttpResponse:
             logging.info('17: get_access_token')
             access_token_response = get_access_token(username)
             stcode = access_token_response.status_code
-            if stcode == 200:
-                logging.info('22: 200 terug met access token')
+            if stcode == 200 or stcode == 201:
+                if stcode == 201:
+                    logging.info('21: 201 terug')
+                elif stcode == 200:
+                    logging.info('22: 200 terug')
                 access_token = access_token_response.get_body().decode('utf-8')
                 logging.info(str(access_token))
                 # get activities
