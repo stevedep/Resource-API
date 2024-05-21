@@ -23,12 +23,13 @@ def get_users(req: func.HttpRequest) -> func.HttpResponse:
         # send token_str to api to get username, performa a get request to api
         url = "http://localhost:7072/api/CheckToken"
         headers = {'Authorization': token_str}
+        logging.info('10: CheckToken aanroepen')
         r = requests.get(url, headers=headers)
-        logging.info(r.status_code)
+        logging.info('11: statuscode uitlezen: ')
         if r.status_code == 202:
             # get username from responsetext and load into json to then get the userid using that key
             username = json.loads(str(r.text))['userid']
-            logging.info(username)
+            logging.info('12 check of username bestaat in userid.json')
             with open('userid.json') as json_file:
                 strava_tokens = json.load(json_file)
 
@@ -36,8 +37,10 @@ def get_users(req: func.HttpRequest) -> func.HttpResponse:
             if username in strava_tokens:
                 # add 4 seconds delay
                 time.sleep(1)
+                logging.info('14: use is gevonden')
                 return func.HttpResponse("User found", status_code=204)
             else:
+                logging.info('13: User not found')
                 return func.HttpResponse("User not found", status_code=404)
         else:  # checktoken failed
             return func.HttpResponse(
@@ -239,6 +242,7 @@ def Get_Activities(req: func.HttpRequest) -> func.HttpResponse:
                 r = requests.get(
                     url + '?access_token=' + str(access_token), verify=False)
                 r = r.json()
+                logging.info('24: activities ontvangen en return deze met status 200')
                 return func.HttpResponse(json.dumps(r), status_code=200)
             else:
                 return func.HttpResponse("Get new tokens", status_code=stcode)
@@ -259,12 +263,14 @@ def Store_Tokens(req: func.HttpRequest) -> func.HttpResponse:
         url = "http://localhost:7072/api/CheckToken"
         headers = {'Authorization': token_str}
         r = requests.get(url, headers=headers)
-        logging.info(r.status_code)
+        logging.info('token is gecheked, is in principe in orde')
     if r.status_code == 202:    
         username = json.loads(str(r.text))['userid']        
+        #onderstaande kan weg, is niet meer nodig
         with open('userid.json') as json_file:
             strava_tokens = json.load(json_file)
-        logging.info('132: Tokens ophalen')
+        
+        logging.info('133: Tokens ophalen')
         response = requests.post(
             url='https://www.strava.com/oauth/token',
             data={
@@ -275,10 +281,10 @@ def Store_Tokens(req: func.HttpRequest) -> func.HttpResponse:
             }, verify=False)
         # Save json response as a variable
         # logging.info(strava_tokens)
-        logging.info('133: Tokens ontvangen')
+        logging.info('134: Tokens ontvangen')
         strava_tokens[username] = response.json()
         # store to local file
-        logging.info('134: Tokens opslaan')
+        logging.info('135: Tokens opslaan')
         with open('userid.json', 'w') as outfile:
             json.dump(strava_tokens, outfile)
 
