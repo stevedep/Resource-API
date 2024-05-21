@@ -167,6 +167,7 @@ def Get_Activity(req: func.HttpRequest) -> func.HttpResponse:
 
 
 def get_access_token(username):
+    logging.info('12: check username')
     with open('userid.json') as json_file:
                 strava_tokens = json.load(json_file)
     # check if key exists for username
@@ -263,7 +264,7 @@ def Store_Tokens(req: func.HttpRequest) -> func.HttpResponse:
         username = json.loads(str(r.text))['userid']        
         with open('userid.json') as json_file:
             strava_tokens = json.load(json_file)
-
+        logging.info('132: Tokens ophalen')
         response = requests.post(
             url='https://www.strava.com/oauth/token',
             data={
@@ -273,9 +274,11 @@ def Store_Tokens(req: func.HttpRequest) -> func.HttpResponse:
                 'grant_type': 'authorization_code'
             }, verify=False)
         # Save json response as a variable
-        logging.info(strava_tokens)
+        # logging.info(strava_tokens)
+        logging.info('133: Tokens ontvangen')
         strava_tokens[username] = response.json()
         # store to local file
+        logging.info('134: Tokens opslaan')
         with open('userid.json', 'w') as outfile:
             json.dump(strava_tokens, outfile)
 
@@ -288,7 +291,7 @@ def Store_Tokens(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse(
                 status_code=302,
                 headers={
-                    'Location': 'http://localhost:3000'
+                    'Location': 'http://localhost:3000?redirected=true'
                 }
             )
     else:
